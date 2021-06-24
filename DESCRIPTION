@@ -30,6 +30,8 @@ Imports:
     edgeR,
     foreach,
     fs,
+    future.callr,
+    future,
     graphics,
     GenomicRanges,
     glue,

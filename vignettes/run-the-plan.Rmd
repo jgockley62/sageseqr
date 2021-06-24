@@ -49,7 +49,15 @@ eval(parse( text=
 setwd('../')
 targets::tar_manifest(fields="command")
 
-targets::tar_make()
+if(isTRUE(!!config::get("workers"))) {
+  workers = config::get("workers")
+}else{
+  workers = 1
+}
+
+#targets::tar_make()
+future::plan(future.callr::callr)
+targets::tar_make_future(workers = workers)
 
 ```
 

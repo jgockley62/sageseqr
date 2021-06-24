@@ -26,14 +26,16 @@ list(
   targets::tar_target(
     counts,
     tibble::column_to_rownames(import_counts,
-                               var = !!config::get("counts")$`gene id`)
+                               var = !!config::get("counts")$`gene id`),
+    pattern = map(import_counts)
   ),
   targets::tar_target(
     clean_md,
     clean_covariates(md = import_metadata,
                      factors = !!config::get("factors"),
                      continuous = !!config::get("continuous"),
-                     sample_identifier = !!config::get("metadata")$`sample id`)
+                     sample_identifier = !!config::get("metadata")$`sample id`),
+    pattern = map(import_metadata)
   ),
   targets::tar_target(
     biomart_results,
@@ -42,7 +44,8 @@ list(
                 version = !!config::get("biomart")$version,
                 filters = !!config::get("biomart")$filters,
                 host = !!config::get("biomart")$host,
-                organism = !!config::get("biomart")$organism)
+                organism = !!config::get("biomart")$organism),
+    pattern = map(counts)
   ),
   targets::tar_target(
     filtered_counts,
@@ -50,48 +53,57 @@ list(
                  count_df = counts,
                  conditions = !!config::get("conditions"),
                  cpm_threshold = !!config::get("cpm threshold"),
-                 conditions_threshold = !!config::get("percent threshold"))
+                 conditions_threshold = !!config::get("percent threshold")),
+    pattern = map(counts,clean_md)
   ),
   targets::tar_target(
     biotypes,
-    summarize_biotypes(filtered_counts, biomart_results)
+    summarize_biotypes(filtered_counts, biomart_results),
+    pattern = map(filtered_counts, biomart_results)
   ),
   targets::tar_target(
     cqn_counts,
-    cqn(filtered_counts, biomart_results)
+    cqn(filtered_counts, biomart_results),
+    pattern = map(filtered_counts, biomart_results)
   ),
   targets::tar_target(
     gene_coexpression,
-    plot_coexpression(cqn_counts)
+    plot_coexpression(cqn_counts),
+    pattern = map(cqn_counts)
   ),
   
   targets::tar_target(
     boxplots,
     boxplot_vars(md = clean_md,
                  include_vars = !!config::get("continuous"),
-                 x_var = !!config::get("x_var"))
+                 x_var = !!config::get("x_var")),
+    pattern = map(clean_md)
   ),
   targets::tar_target(
     sex_plot,
     conditional_plot_sexcheck(clean_md,
                               counts,
                               biomart_results,
-                              !!config::get("sex check"))
+                              !!config::get("sex check")),
+    pattern = map(clean_md,counts)
   ),
   targets::tar_target(sex_plot_pca,
                       plot_sexcheck_pca(
                         clean_md,
                         counts,
                         biomart_results,
-                        !!config::get("sex check"))
+                        !!config::get("sex check")),
+                      pattern = map(clean_md,counts)
   ),                    
   targets::tar_target(
     correlation_plot,
-    get_association_statistics(clean_md)
+    get_association_statistics(clean_md),
+    pattern = map(clean_md)
   ),
   targets::tar_target(
     significant_covariates_plot,
-    run_pca_and_plot_correlations(cqn_counts$E,clean_md)
+    run_pca_and_plot_correlations(cqn_counts$E,clean_md),
+    pattern = map(clean_md,cqn_counts)
   ),
   targets::tar_target(
     outliers,
@@ -100,7 +112,8 @@ list(
                       !!config::get("dimensions")$color, 
                       !!config::get("dimensions")$shape, 
                       !!config::get("dimensions")$size
-                     )
+                     ),
+    pattern = map(clean_md,filtered_counts)
   ),
   targets::tar_target(
     model,
@@ -109,7 +122,8 @@ list(
       primary_variable = !!config::get("x_var"),
       cqn_counts = cqn_counts,
       skip = !!config::get("skip model")
-    )
+    ),
+    pattern = map(clean_md,cqn_counts)
   ),
   targets::tar_target(
     report,
@@ -148,7 +162,13 @@ list(
       activity_provenance = "Analyze RNA-seq data with sageseqr pkg",
       config_file = "config.yml",
       report_name = !!config::get("report")
-    )
+    ),
+    pattern = map(clean_md,
+                  cqn_counts,
+                  filtered_counts,
+                  biomart_results,
+                  document_inputs
+                )
   )
   
 )
