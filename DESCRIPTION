@@ -30,6 +30,7 @@ Imports:
     edgeR,
     foreach,
     fs,
+    future.batchtools,
     future.callr,
     future,
     graphics,
