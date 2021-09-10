@@ -138,13 +138,14 @@ list(
     purrr::map(
       get("de contrasts"),
       function(x) compute_residuals(
-        clean_metadata,
+        clean_md,
         filtered_counts,
         cqn_counts = cqn_counts$E,
         primary_variable = x,
         model_variables = selected_model
       )
-    ),
+    )
+  ),
   tar_target(
     de,
     wrap_de(
@@ -180,7 +181,7 @@ list(
     output_file = glue::glue("{getwd()}/{config::get('report')}.html")
   ),
   tar_target(
-    document_inputs,
+     document_inputs,
     provenance_helper(
       get("metadata")$synID,
       get("counts")$synID,
@@ -214,15 +215,15 @@ list(
           "BioMart query results",
           "Normalized counts (CQN)"
         ),
-        as.list(
+         as.list(
           glue::glue("Residualized counts({names(residualized_counts)})")
         ),
         as.list(
           glue::glue(
             "Differential Expression ({names(de)})"
-            )
           )
-        ),
+        )
+      ),
       data_names = append(
         list(
           "clean_md",
