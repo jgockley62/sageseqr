@@ -41,7 +41,13 @@ list(
       version = get("biomart")$version,
       filters = get("biomart")$filters,
       host = get("biomart")$host,
-      organism = get("biomart")$organism
+      organism = get("biomart")$organism,
+      exon = get("biomart")$`exon only`,
+      custom = get("biomart")$`custom build`,
+      gtfID = get("biomart")$gtfID,
+      gtfVersion = get("biomart")$gtfVersion,
+      fastaID = get("biomart")$fastaID,
+      fastaVersion = get("biomart")$fastaVersion
     )
   ),
   tar_target(

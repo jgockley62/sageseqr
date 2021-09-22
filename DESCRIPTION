@@ -33,6 +33,8 @@ RoxygenNote: 7.1.1
 biocViews:
 Imports:
     biomaRt,
+    Biostrings,
+    BSgenome,
     cqn,
     data.table,
     dplyr,
@@ -40,6 +42,8 @@ Imports:
     fs,
     graphics,
     GenomicRanges,
+    GenomicTools,
+    GenomicTools.fileHandler,
     glue,
     ggforce,
     ggplot2,
