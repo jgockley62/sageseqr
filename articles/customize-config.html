@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,18 +33,12 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">sageseqr</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
-<li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
@@ -57,14 +53,17 @@
       <a href="../articles/customize-config.html">Write your own config file</a>
     </li>
     <li>
-      <a href="../articles/run-the-plan.html">Run the drake plan</a>
+      <a href="../articles/run-the-plan.html">Run the targets plan</a>
+    </li>
+    <li>
+      <a href="../articles/sagseqr-alpha-steps.html">Run the drake plan in version 0.0.0.9-alpha</a>
     </li>
   </ul>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/Sage-Bionetworks/sageseqr/">
+  <a href="https://github.com/Sage-Bionetworks/sageseqr/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -85,14 +84,14 @@
       <h1 data-toc-skip>Write your own config file</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Sage-Bionetworks/sageseqr/blob/master/vignettes/customize-config.Rmd"><code>vignettes/customize-config.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Sage-Bionetworks/sageseqr/blob/HEAD/vignettes/customize-config.Rmd" class="external-link"><code>vignettes/customize-config.Rmd</code></a></small>
       <div class="hidden name"><code>customize-config.Rmd</code></div>
 
     </div>
 
     
     
-<p>A <a href="https://github.com/kelshmo/sageseqr/blob/master/config.yml">configuration file</a> defines the inputs for the RNA-seq workflow. Update the default parameters to include the Synapse ID where your data is stored and to the factor and continuous variables you want to test in the covariate model selection. The full list of configurable options are:</p>
+<p>A <a href="https://github.com/kelshmo/sageseqr/blob/master/config.yml" class="external-link">configuration file</a> defines the inputs for the RNA-seq workflow. Update the default parameters to include the Synapse ID where your data is stored and to the factor and continuous variables you want to test in the covariate model selection. The full list of configurable options are:</p>
 <pre><code>counts:
   synID:          Required. Synapse ID to counts data frame with identifiers to 
                   the metadata as column names and gene ids in a column.
@@ -117,17 +116,34 @@ biomart:
                   workflow. Defaults to ensembl.org.
   organism:       Required. A character vector of the organism name. This argument 
                   takes partial strings. For example,"hsa" will match "hsapiens_gene_ensembl".
+  exon only:      Optional. Set to TRUE if you want gene lengths and GC-content
+                  to be calculated only for exons of gene features. Recomended 
+                  depending on you experimental design paradigm. Default is FALSE,
+                  which considers the entire transcript start to stop (ie. includes
+                  intronic regions).
+  custom build:   Optional. If you want to bulid the biomart object from a user specified
+                  or custom GTF and genome FASTA file specify this value as TRUE.
+                  Default is FALSE. This would be reccomended for users analyzing
+                  data from a model system with a trans-gene inserted into the 
+                  genome.
+  gtfID:          Required IF custom build is set to TRUE. Synapse ID to the user
+                  specified GTF file to build the biomart object from.
+  gtfVersion:     Optional.Include Synapse file version number (e.g. 3).
+  fastaID:        Required IF custom build is set to TRUE. Synapse ID to the user
+                  specified genome FASTA file to build the biomart object from.
+  fastaVersion:   Optional. Include Synapse file version number (e.g. 3).
 factors:          Required. List of factor variables in brackets. Variables must be 
                   present in the metadata as column names (e.g. [ "donorid", "source"]).
 continuous:       Required. List of continuous variables in brackets. Variables must 
                   be present in the metadata as column names (e.g. [ "rin", "rin2"]).
-x_var:            Required. A boxplot will visualize the distribution of continuous variables using
-                  the x_var as a dimension.
+x_var:            Required. This is your predictor or primary variable of interest. 
+                  Additionally, a boxplot will visualize the distribution of 
+                  continuous variables using the x_var as a dimension.
 conditions:       Optional. Filtering low-expression genes is a common practice to improve
                   sensitivity in detection of differentially expressed genes. Low
                   count genes that have less than a user-defined threshold of counts 
                   per million (CPM) in a user-defined percentage of samples per the
-                  conditions provided here will be removed. (e.g. ["diagnosis", "sex"])
+                  conditions provided here will be removed. (e.g. ["diagnosis", "sex"]). 
 cpm threshold:    Optional. The minium allowable CPM to keep a gene in the analysis.
 percent threshold:Optional. The percentage of samples that should contain the minimum number
                   of CPM. If a condition is passed, the percentage will apply to 
@@ -141,6 +157,28 @@ dimensions:       Required. Specify the PCA dimensions by variable name.
   size:
 skip model:       Optional. If TRUE, the exploratory data report is run. Model selection
                   is not computed.
+force model with: Optional. Force differential expression with this user defined model
+                  instead of the output of stepwise regression.
+cores:            Optional. Specify an integer of cores to use with a BiocParallel 
+                  parallel backend.  Null value results in the number of available
+                  cores minus one being used. Parallel backend ccurrently only supports
+                  BiocParallel::SnowParam(). BatchtoolsParam, MulticoreParam, 
+                  BiocParallelDoparParam, and SerialParam are not currently supported.
+de FC:            The fold-change (FC) of significant differentially expressed 
+                  (de) genes must exceed this value. This value will be transformed
+                  into log2 FC.
+de p-value threshold: The adjusted p-value of significant differentially expressed 
+                  (de) genes must exceed this value.
+de contrasts:     Required. 
+  primary:        Required. Variable(s) in the metadata to define comparisons between 
+                  groups. Currently must be either one numeric variable, or one or
+                  more catagorical variables.
+  is_numeric_int: Optional. Specifies if there is a numeric interaction variable specified.
+                  default (FALSE)
+  numeric:        Optional. The numeric in variable which interacts with the 
+                  primary variable(s). default (NULL)
+  &lt;any named list:&gt; If there are multiple comparisons, set them up as nested lists.
+visualization gene list: Label this list of genes in the volcano plot.
 report:           Required. The name of your project. This will become the name of your 
                   output html file.
 store output:     Required. Folder Synapse Id to store output on Synapse.</code></pre>
@@ -155,11 +193,13 @@ store output:     Required. Folder Synapse Id to store output on Synapse.</code>
 
 
       <footer><div class="copyright">
-  <p>Developed by Kelsey Montgomery.</p>
+  <p></p>
+<p>Developed by Kelsey Montgomery, Jake Gockley, Daisy Han.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer>
@@ -167,6 +207,8 @@ store output:     Required. Folder Synapse Id to store output on Synapse.</code>
 
   
 
+
+  
 
   </body>
 </html>
